@@ -1,0 +1,53 @@
+SELECT * FROM RunnersDatabase.dbo.[cleanedup_runners_data1(AutoRecovered)]
+
+
+--counting states
+
+SELECT COUNT(Distinct State) as distinct_count
+from RunnersDatabase.dbo.[cleanedup_runners_data1(AutoRecovered)]
+
+--What was the average time of Men and Women
+
+SELECT Gender, AVG(Total_Minutes) as avg_time
+FROM RunnersDatabase.dbo.[cleanedup_runners_data1(AutoRecovered)]
+GROUP BY Gender
+
+
+--youngest and oldest
+
+SELECT Gender, Min(Age) as youngest, Max(Age) as oldest
+FROM RunnersDatabase.dbo.[cleanedup_runners_data1(AutoRecovered)]
+GROUP BY Gender;
+
+--Average time for age groups
+
+WITH age_buckets AS (
+SELECT total_minutes,
+	CASE WHEN age < 30 THEN 'age_20-29'
+		WHEN age < 40 THEN 'age_30-39'
+		WHEN age < 50 THEN 'age_40-49'
+		WHEN age < 60 THEN 'age_50-59'
+	ELSE 'age_60+' END AS age_group
+FROM RunnersDatabase.dbo.[cleanedup_runners_data1(AutoRecovered)]
+)
+
+SELECT age_group, AVG(total_minutes) avg_race_time 
+FROM age_buckets
+GROUP BY age_group;
+
+
+--Top 3 males and females
+
+WITH gender_rank AS (
+SELECT RANK() OVER (PARTITION BY Gender ORDER BY total_minutes asc) as gender_rank,
+fullname,
+gender,
+total_minutes
+FROM RunnersDatabase.dbo.[cleanedup_runners_data1(AutoRecovered)]
+)
+SELECT *
+FROM gender_rank
+WHERE gender_rank < 4
+ORDER BY total_minutes
+
+
